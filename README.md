@@ -1,1 +1,5 @@
 # International_Student_Demography
+
+This project explores the arrival of international students in the United States each year, using data from four sources that describe where they come from, their studies, how they pay for school, and their visa status. The main goal is to look closely at different things about international students in the U.S., like where they're from and what they like to study. By studying this information, we can learn a lot about what policies might work best for international students and how they affect job opportunities in the U.S. This data could also help governments in other countries make decisions about education for students going abroad for their master's degrees.
+
+In short, this project gives us a good look at the international students coming to the U.S., showing us their backgrounds, what they're studying, and how they're paying for school. The findings can help people who make rules about immigration and education, as well as those who work in international education. Plus, it could encourage cooperation between countries and lead to more cultural exchange in universities worldwide.
