@@ -1,0 +1,840 @@
+---
+title: "Project_01"
+output: html_document
+date: "2024-02-24"
+---
+
+#### Importing the necessary libraries.
+
+```{r , warning=FALSE}
+#install.packages("tidyverse")
+library(tidyverse)
+
+
+#install.packages("rebus")
+library(rebus)
+```
+
+#### Loading the dataset. The dataset gives information on the number of students (international and born in U.S ) studying in U.S universities for different academic degrees like Undergraduation, Graduation etc.
+
+```{r , warning=FALSE}
+
+
+academic <- read_csv("academic.csv" , show_col_types = FALSE)
+
+head(academic,5)
+
+```
+
+#### Performing basic checks.
+
+```{r}
+#Performing basic checks using glimpse and summary function.
+
+glimpse(academic)
+
+# The dataset has 75 rows and 7 columns.
+
+# A lot of NA values and datatype of the year column needs to be changed.
+
+
+
+```
+
+```{r}
+summary(academic)
+
+#This gives you an idea of the minimum and maximum students from various academic levels across 70 years.
+
+#Missing values for each column.
+```
+
+#### Tidying the Year column.
+
+```{r}
+#Year column is written as "1948/49" meaning the number of students for the year of 1948. This can be written as "1948" explaining the number of admissions that took place for the year 1948.
+
+#I am using str_replace function to correct the column values and will then change it to correct data type.
+
+library(stringr)
+
+library(rebus)
+
+
+  patt = "/" %R%  DGT %R%  DGT
+  
+   academic$year  <-str_replace(academic$year  , pattern = patt , replacement = "")
+  
+    
+# Converting year column into numeric datatype and extracting year values for each date and overwriting it with the year column in the dataset.
+   
+academic$year <-  year(as.Date(academic$year , format = "%Y"))
+
+academic$year
+
+```
+
+#### Subsetting data to get all observations post 2000.
+
+```{r}
+
+academic  <- academic[academic$year >= 2000, ]
+
+head(academic)
+
+
+```
+
+#### Checking if the data has NA values
+
+```{r}
+
+sum(is.na(academic))
+
+```
+
+
+#### Trend showing no. of international students getting admitted into U.S universities for the past 20 years.
+```{r}
+
+academic %>%
+  
+  ggplot(aes(year , students / 1000)) +
+  
+  geom_bar(stat = "identity" , fill = "red") +
+  
+ scale_y_continuous(labels = function(x) paste0(x , "K")) +
+  
+  labs(title = "International students in last 20 years" , 
+       
+       y = "No. of students in (thousands)" , 
+       
+       x = "Year") +
+  
+  theme_classic() +
+  
+  theme(axis.text.x  = element_text(angle = 45 , hjust = 1) , plot.margin = unit(c(1, 0.1, 1, 1), "cm"))
+
+```
+
+
+##### This shows an upward trend in the number of international students taking admissions into U.S universities in the past 20 years. There is a significant dip for the years 2019-2020 and that can be attributed to the nationwide lockdowns that happened during the times of COVID.
+
+
+##### Since 2000 till 2020 the percentage of international students in U.S universities has grown by 50% which shows the increasing trend in globalization of education.
+
+#####  The surge in international students in U.S. universities, possibly driven by superior education and economic prospects, signals a need for other countries to enhance their education systems to retain their talent pool. Policymakers can leverage this data to formulate effective strategies for international students, considering their potential impact on the U.S. workforce. Furthermore, the data can shed light on the retention of international graduates within the U.S., influencing discussions on post-graduation career paths.
+
+
+
+
+
+
+
+#### Distribution of international and students residing in U.S
+
+```{r}
+
+
+pivot_longer(academic , cols = c("students" , "us_students") , names_to = "Type" , values_to = "number") %>%
+  
+  select(Type , number) %>%
+  
+  ggplot(aes(Type , number / 1000000)) +
+  
+  geom_bar(stat = "identity" , fill = "lightgreen") +
+  
+   scale_y_continuous(labels = function(x) paste0(x , "M")) +
+  
+  labs(title = "Distribution of student profile" , 
+       
+       x = "Student Profile" , 
+       
+       y = "No. of students in millions ") +
+  
+  theme_classic()
+
+```
+
+
+
+##### As we can see in the graph, and I suppose this was also my thought before showing it to you, in the United States there is only a small percentage of international students compared to the total number of students studying there. Though the percentage increase in past 20 years has been close to 50% but that is very small as compared to the local student population.
+
+
+
+
+
+
+
+#### This dataset gives information on the origin of students in terms of there country of origin as well as there chosen academic type.
+```{r}
+origin <- read_csv("origin.csv" , show_col_types = FALSE)
+
+head(origin)
+```
+
+
+
+
+#### Tidying the Year column.
+```{r}
+
+ patt = "/" %R% DGT %R% DGT
+  
+   origin$year  <-str_replace(origin$year  , pattern = patt , replacement = "")
+  
+    
+# Converting year column into numeric datatype and extracting year values for each date and overwriting it with the year column in the dataset.
+   
+origin$year <-  year(as.Date(origin$year , format = "%Y"))
+
+
+
+pattern1 <-   "," %R% SPC %R% one_or_more(WRD) %R% optional(",") %R% optional(SPC)  %R% optional(one_or_more(WRD)) %R% END
+
+origin$origin <- str_replace(origin$origin , pattern = pattern1 , replacement = "" )
+
+head(origin,10)
+
+```
+
+
+
+
+
+```{r}
+
+  a <- origin %>%
+  
+  group_by(year , origin) %>%
+  
+  summarise(Total_students = sum(students)) %>%
+  
+  slice_max( order_by = Total_students , n = 10 ) 
+  
+  
+   
+  ggplot( a, aes(year , Total_students / 1000 , fill = origin)) +
+  
+  scale_y_continuous(labels = function(x) paste0(x , "K")) + 
+  
+  geom_bar(stat = "identity"  , width = 0.7) +
+  
+  theme_classic() + 
+  
+  theme(axis.text.x  = element_text(angle = 45 , hjust = 1)) +
+  
+  labs(title = "Yearly Top 10 countries" , x = "Year" , y = "Total no. of stuents in (thousands)")
+
+
+```
+
+
+##### The above graph is drawn to highlight the top 10 (per year) countries of origin of international students studying in U.S.A. As clearly evident, in the past 20 years maximum students have come from China followed by India and Saudi Arabia. So the maaximum contribution has come from Asia followed by Middle Eastern countries. This also provides information on the cultural diversity that can be expected in U.S universities.
+
+
+
+
+
+
+
+
+
+
+
+#### This is a live animation of how the metrics for the number of student admissions have changed in the past 20 years in U.S universities.
+```{r}
+
+
+library(gganimate)
+
+   origin %>%
+  
+  group_by(year , origin , academic_type) %>%
+  
+  summarise(Total_students = sum(students)) %>%
+  
+  slice_max( order_by = Total_students , n = 10 ) %>%
+  
+  
+   
+  ggplot( aes(academic_type , Total_students / 1000 )) +
+  
+  scale_y_continuous(labels = function(x) paste0(x , "K")) + 
+  
+  geom_bar(stat = "identity"  , width = 0.7 , fill = "red") +
+    
+     theme_classic() +
+     
+  
+  theme( axis.text.x = element_text(angle = 30 , hjust = 1 , size = 12 ) ) +
+  
+labs(title = 'Year: {frame_time}', x = 'Academic Type', y = 'Total Students') +
+     
+  transition_time(year) +
+     
+  ease_aes('linear')
+
+
+
+```
+
+
+
+```{r}
+#install.packages("maps")
+#install.packages("plotly")
+#install.packages("ggzoom")
+```
+
+
+
+```{r}
+library(maps)
+#library(ggzoom)
+
+library(maps)
+library(dplyr)
+library(plotly)
+
+# Assuming 'a' is your data frame with the top 10 countries
+# Load world map data
+world <- map_data("world")
+
+# Merge world map data with the 'a' data frame
+map_data <- merge(world, a, by.x = "region", by.y = "origin", all.x = TRUE)
+
+# Create the map with plotly
+interactive_map <- ggplotly(
+  ggplot(map_data, aes(x = long, y = lat, group = group, fill = Total_students)) +
+    geom_polygon(color = "white", size = 0.1) +
+    scale_fill_gradient(low = "lightblue", high = "darkblue", name = "Total Students") +
+    theme_minimal() +
+    #facet_wrap(~year, scales = "free") +
+    labs(title = "Top 10 Countries of Origin for Students (per Year)",
+         fill = "Total Students")
+)
+
+# Show the interactive map
+interactive_map
+
+
+
+
+
+```
+
+
+##### This is a world map view of the same information presented in a differnet way. Here it is easily evident the continents that have contributed to the U.S universities.
+
+
+
+
+
+
+#### Tidying the year column.
+```{r}
+library(tidyverse)
+academic_details <- read_csv("academic_detail.csv")
+
+
+#head(academic_details)
+
+
+library(stringr)
+
+library(rebus)
+
+
+  patt = "/" %R% DGT %R% DGT
+  
+   academic_details$year  <-str_replace(academic_details$year  , pattern = patt , replacement = "")
+  
+    
+# Converting year column into numeric datatype and extracting year values for each date and overwriting it with the year column in the dataset.
+   
+academic_details$year <-  year(as.Date(academic_details$year , format = "%Y"))
+
+academic_details$year
+
+
+academic_details  <- academic_details[academic_details$year >= 2000, ]
+
+head(academic_details)
+
+```
+
+
+
+```{r}
+
+academic_details %>%
+  
+  group_by(year , academic_type) %>%
+  
+  summarise(Total_students = sum(students)) %>%
+  
+  ggplot(aes(year , Total_students / 1000 , color = academic_type )) +
+  
+  scale_y_continuous( labels = function(x) paste0( x , "k")) + 
+  
+   theme_classic() +
+  
+  theme(panel.background = element_rect(fill = "white")) + 
+  
+  geom_line(size = 2) + 
+  
+  labs(title = "Trend showing academic type profile of students from past 20 years" , 
+       
+       x = "Year" , y = "No. of students in (thousands)")
+
+
+
+```
+
+##### The number of graduate and undergraduate students have always been high as compared to non-degree and OPT students. After year 2010 the number of students coming to pursue bachelors has surpassed the number of students for masters.
+
+
+
+
+
+
+```{r}
+
+library(ggplot2)
+
+academic_details %>%
+  
+  select(year, academic_level, students) %>%
+  
+  group_by(academic_level) %>%
+  
+  summarise(Total_students = sum(students) / sum(academic_details$students) * 100) %>%
+  
+  arrange(desc(Total_students)) %>%
+  
+  ggplot(aes(x = "", y = Total_students, fill = academic_level, 
+             
+             label = sprintf("%.1f%%", Total_students))) +
+  
+  geom_bar(stat = "identity", width = 1, color = "black", size = 1) +
+  
+  coord_polar("y") +
+  
+  geom_text(aes(x = 1.5, label = sprintf("%.1f%%", Total_students)), 
+            
+            position = position_stack(vjust = 0.5), color = "red", size = 4, angle = 30, hjust = 1) +
+  
+  scale_fill_brewer(palette = "Set3") +
+  
+  theme_minimal() +
+  
+  theme(legend.position = "right") +
+  
+  labs(title = "Distribution of Academic Levels", fill = "Academic Level") +
+  
+  theme(legend.title = element_text(size = 10), legend.text = element_text(size = 8))
+
+
+```
+
+
+##### Most of the students are from Bachelor's (32.1%) and Master's (21.7%) followed by Doctoral (14.3%) and OPT (13.3%).
+
+
+
+
+
+
+
+```{r}
+#install.packages("gganimate")
+
+library(gganimate)
+library(ggplot2)
+
+#install.packages("gifski")
+
+#install.packages("gapminder")
+library(gifski)
+```
+
+
+
+#### This is the live animation showing growth in different academic types maongst international students in U.S.
+```{r}
+
+q <- merge(academic_details , origin , by = "year" ) %>%
+  
+  ggplot(aes( academic_level, students.x / 1000,color = origin)) +
+  
+  scale_y_continuous(labels = function(x)  paste0( x , "K")) +
+  
+  geom_bar(stat = "identity") +
+  
+  
+  transition_time(year) +
+  
+  ease_aes('linear') +
+
+  
+  
+   labs(title = 'Year: {frame_time}', x = 'Academic Levels', y = 'Total Students') +
+
+  
+  
+  theme_classic() +
+  
+  theme(legend.position = "none" , axis.text.x = element_text(angle = 30 , hjust = 1 , size = 12 ) )
+  
+
+
+q
+  
+ 
+```
+
+
+
+
+
+
+
+```{r}
+ a <- academic %>%
+  
+  ggplot(aes(year , students / 1000 )) +
+  
+  geom_line(size = 1.5 , color ="red" ) +
+   
+   scale_y_continuous(labels = function(x) paste0(x , "K")) + theme_classic() +
+   
+   labs(title = "Trend in admission of Interntional \n students" , 
+        
+        x = "Year" , 
+        
+        y = "Number of students") +
+   
+   theme(panel.background = element_rect(fill  = "lightblue"))
+
+ 
+ 
+ 
+ b <- academic %>%
+   
+   ggplot(aes(year , us_students /1000000)) +
+   
+   geom_line(size = 1.5 , color ="red" ) +
+   
+   scale_y_continuous(labels = function(x) paste0(x , "M")) + theme_classic() +
+   
+   labs(title = "Trend in admission of U.S students" , 
+        
+        x = "Year" , 
+        
+        y = "Number of students") +
+   
+   theme(panel.background = element_rect(fill  = "lightblue"))
+ 
+   
+   
+ 
+ 
+ library(patchwork)
+ a+b
+
+
+```
+
+##### This graph draws a comparison on the trend of student admissions and also highlights the the contrasting numbers (Y-axis) in terms of student enrollments amongst interntional and local students.
+
+
+
+
+
+
+
+
+#### This dataset provides informaion on the different field of study chosen by students for there education be it bachelors, masters or doctoral.
+```{r}
+
+
+field_of_study <- read_csv("field_of_study.csv" , show_col_types = FALSE)
+
+ patt4 = "/" %R%  DGT %R%  DGT
+  
+   field_of_study$year  <-str_replace(field_of_study$year  , pattern = patt , replacement = "")
+
+   
+   field_of_study$year <-  year(as.Date(field_of_study$year , format = "%Y"))
+
+   origin$year <-  year(as.Date(origin$year , format = "%Y"))
+
+   
+     
+head(field_of_study)
+
+
+```
+
+
+##### Popular fields amongst students since last 20 years. This graph reveals how fields like Engineering, Business Management and Maths with Computer Science have grown in the last 2 decades. This shows the increasing interest in STEM (Science, Technology, Engineering, and Mathematics) fields among students. Policymakers could use this information to tailor educational policies and investments to meet the demands of evolving industries, ensuring that students are well-prepared for the workforce. 
+```{r}
+
+field_of_study %>%
+  
+  ggplot(aes( students  / 1000 , field_of_study )) +
+  
+  scale_x_continuous(labels = function(x) paste0(x , "K") ) + 
+
+  geom_bar(stat = "identity" , fill = "red") +
+  
+  theme_classic() + 
+
+labs(title = 'Year: {frame_time}', x = 'Total Students', y = 'Field of Study') +
+  transition_time(year) +
+  ease_aes('linear')
+
+```
+
+
+
+
+
+
+
+#### This reveals the different sources of funds that students take to complete there education. 
+```{r}
+
+source_of_funds <- read_csv("source_of_fund.csv" , show_col_types = FALSE)
+
+source_of_funds
+
+patt4 = "/" %R%  DGT %R%  DGT
+  
+   source_of_funds$year  <-str_replace(source_of_funds$year  , 
+                                       
+                                       pattern = patt ,
+                                       
+                                       replacement = "")
+
+   
+   source_of_funds$year <-  year(as.Date(source_of_funds$year , format = "%Y"))
+
+source_of_funds %>%
+  
+  ggplot(aes(source_of_fund , students / 1000000)) +
+  
+  geom_bar(stat = "identity") +
+  
+  labs(title = "Source of funds" , 
+       
+       x = "Funcding Source" , 
+       
+       y = "No. of students in millions") +
+  
+  scale_y_continuous(labels = function(x) paste0(x ,"M")) +
+  
+  theme_classic() +
+  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+
+##### As clearly evident the majority students use Personal and Family funds to pay for there university education and this underscores the importance of having strong financial background in order to get access to university education. The relatively small contribution from universities implies that institutional financial aid or scholarships might not be the primary means of supporting students. This could indicate a need for increased efforts in providing financial assistance from the university's end. The substantial contribution from employers suggests that a notable number of students are engaged in work-study programs or receive financial support from their employers. This could indicate a strong connection between education and employment, with employers investing in the education of their workforce. Policymakers could use this information to assess the effectiveness of existing financial aid policies and explore opportunities to enhance support for students, especially in terms of reducing the burden on personal family income.
+
+
+
+
+```{r}
+#view(source_of_funds)
+
+ 
+source_of_funds %>%
+  
+  group_by(year , source_of_fund ) %>%
+  
+  summarise(total = sum(students)) %>%
+  
+  #arrange(desc(total))
+  
+  slice_max(order_by = total , n = 2) %>%
+  
+  
+  ggplot(aes( total/1000 ,source_of_fund )) +
+  
+  
+  scale_x_continuous(labels = function(x) paste0(x , "K")) +
+  
+  facet_wrap(~year) +
+  
+  geom_bar(stat = "identity") +
+  
+  theme_classic() +
+  
+  theme(axis.text.x = element_text(angle = 45 , hjust = 1)) +
+  
+  labs( title = "Different sources of funds students took for last 20 years" , 
+        
+        x = "Total no of students (thousands)" , 
+        
+        y = "Type of Funds")
+
+
+```
+
+
+##### From 1999-2015 most of the students got funds from there family followed by there college or university. However, after 2015 a strange pattern is revelaed where Universities have stopped funding for student loans and people are taking loans from there Current Employment.
+
+
+
+
+
+
+
+#### Visualizing trend over time.
+```{r}
+source_of_funds %>%
+  
+  group_by(year , source_of_fund ) %>%
+  
+  summarise(total = sum(students)) %>%
+  
+  #arrange(desc(total))
+  
+  slice_max(order_by = total , n = 2) %>%
+  
+  
+  ggplot(aes( total/1000 ,source_of_fund )) +
+  
+  
+  scale_x_continuous(labels = function(x) paste0(x , "K")) +
+  
+  #facet_wrap(~year) +
+  
+  transition_time(year) +
+  
+  geom_bar(stat = "identity") +
+  
+  theme_classic() +
+  
+  theme(axis.text.x = element_text(angle = 45 , hjust = 1)) +
+  
+
+labs(title = 'Year: {frame_time}', x = 'Total Students', y = 'Field of Study') +
+  transition_time(year) +
+  ease_aes('linear')
+```
+
+
+
+
+```{r}
+
+source_of_funds %>%
+  
+  ggplot(aes(source_type , students / 1000000)) +
+  
+  geom_bar(stat = "identity") +
+  
+  labs(title = "Source of funds" , 
+       
+       x = "Funcding type" , 
+       
+       y = "No. of students in millions") +
+  
+  scale_y_continuous(labels = function(x) paste0(x ,"M")) +
+  
+  theme_classic() +
+  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+```
+
+##### This reveals that most of the students who are taking Funds for there education are international students.
+
+
+
+
+
+
+```{r}
+
+visa_status <- read_csv("status.csv" , show_col_types = FALSE)
+
+patt4 = "/" %R%  DGT %R%  DGT
+  
+   visa_status$year  <-str_replace(visa_status$year  , pattern = patt , replacement = "")
+
+   
+   visa_status$year <-  year(as.Date(visa_status$year , format = "%Y"))
+
+head(visa_status)
+
+```
+
+
+```{r}
+
+
+visa_status %>%
+  
+  pivot_longer(cols = c("male" , "female") , names_to = "Gender" , values_to = "Number") %>%
+  
+  ggplot(aes(year , Number /1000  , fill = Gender)) +
+  
+  scale_y_continuous(labels = function(x)  paste0(x , "K")) + 
+  
+  labs(title = "Gender distribution for 20 years" , 
+       
+       x = "Year" , 
+       
+       y = "Total Students") + 
+   
+  #facet_wrap(~year) +
+  
+   theme_classic()+
+  
+  geom_bar(stat = "identity")
+
+
+```
+
+
+##### Number of males coming to U.S universities has always been the highest.
+
+
+
+
+#### Visa wise student distribution.
+```{r}
+
+ library(ggplot2)
+
+vs <- visa_status %>%
+  pivot_longer(cols = c("part_time", "visa_f", "visa_j", "visa_other"),
+               names_to = "Visa_Type", values_to = "Value")
+
+ggplot(vs, aes(x = "", y = Value, fill = Visa_Type)) +
+  
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  
+  coord_polar(theta = "y") +
+  
+  theme_void() +
+  
+  labs(title = "Distribution of Visa Types")
+
+  
+```
+
+
+
+##### Most of the visa types belong to F1 indicating that majority are students who have come here for education.
+
+
+
