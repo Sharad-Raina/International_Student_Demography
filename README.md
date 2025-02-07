@@ -1,5 +1,7 @@
 # International Student Demography 📊
 
+https://github.com/Sharad-Raina/International_Student_Demography/blob/5125e5022456ecfd4acbb1062609580069a97324/miniature-figures-world-map-representing-global-connectivity-diversity-geography-culture-population-ai-generated-357309140.webp
+
 This project analyzes trends in international student admissions in the U.S. by combining multiple datasets to explore student demographics, academic preferences, funding sources, and visa statuses. The insights are designed to support policy decisions and strategic planning in international education. 🌍
 
 ## Data Sources
