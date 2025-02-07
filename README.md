@@ -2,6 +2,8 @@
 
 This project analyzes trends in international student admissions in the U.S. by combining multiple datasets to explore student demographics, academic preferences, funding sources, and visa statuses. The insights are designed to support policy decisions and strategic planning in international education. 🌍
 
+![miniature-figures-world-map-representing-global-connectivity-diversity-geography-culture-population-ai-generated-357309140-ezgif com-webp-to-jpg-converter](https://github.com/user-attachments/assets/ca391bcd-d578-4830-90f7-634c4c74b204)
+
 ## Data Sources
 - **Academic Enrollment:** Overall student counts (international vs. U.S.) 🏫
 - **Origin Data:** Countries of origin for international students 🌐
